@@ -1,0 +1,178 @@
+---
+title: "AnalisisExploratorio_EGT"
+author: "Elena Garcia Torres"
+date: "8 de diciembre de 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## INDICE
+
+* 1. Enunciado.
+* 2. Introducción
+* 3. Carga de datos.
+* 4. Análisis descriptivo.
+* 5. Análisis exploratorio.
+* 6. Conclusiones.
+
+
+## 1. Enunciado
+  # Esta práctica consiste en entregar un script R markdown con el Análisis Descriptivo y Exploratorio del dataset principal utilizado en la clase de "Introducción a R".
+
+  # Recordamos que el conjunto de datos que se encuentra en https://archive.ics.uci.edu/ml/machine-learning-databases/00320/student.zip
+
+  # Recordad que este dataset constaba de:
+
+  # 2 archivos CSV con los datos: student-mat.csv, student-por.csv. Un script student-merge.R que mostraba cómo obtener los estudiantes que aparecen en ambos CSV
+  # Un "diccionario" que describe los campos: student.txt.
+  # La descripción de los datos (diccionario) se encuentra en: https://archive.ics.uci.edu/ml/datasets/Student+Performance
+
+  # Para facilitaros la realización de la práctica, deciros que el análisis debería idealmente contar con estas 5 fases
+
+ # 1. Introducción con el objetivo del análisis:
+
+ # En esta práctica pretende llegar sólo hasta el Exploratorio
+ # Pero se debe ir pensando en una finalidad posterior (Modelo predictivo, Clasificación, ....) Aunque esta finalidad última no se incluya en la práctica, se debe plantear la "hipótesis" en la introducción. Con este dataset se podría tratar de predecir el valor de la nota final G3, o clasificar a los alumnos como aprobados o suspendidos en base a que esa nota sea mayor o menor que 5, pero se puede pensar otro objetivo si así se quiere).
+Se recomienda leer este estudio "Using data mining to predict secondary school student performance" http://hdl.handle.net/1822/8024. Se puede bajar el paper en PDF: http://repositorium.sdum.uminho.pt/bitstream/1822/8024/1/student.pdf. Este paper aplica algunos modelos y los compara.
+  # 2. Carga de los datos
+
+  # 3. Análisis descriptivo
+
+  # 4. Análisis exploratorio (puede ser apoyado en algún método NO supervisado)
+
+  # 5. Conclusiones: ¿Pensamos que este dataset puede servir para la finalidad/modelo que habíamos planteado en la Introducción? ¿Tenemos ya alguna conclusión preliminar sobre qué variables pueden resultar más últimes para dicha finalidad/modelo (predictivo, clasificación, ...)?
+
+  # El informe será entregado en formato Rmarkdown (http://rmarkdown.rstudio.com/) en el que se incluirá el código R y las explicaciones convenientes, así como los gráficos.
+
+  # El informe PDF, Word o HTML que se genere a partir del Rmarkdown, no podrá superar las 8 páginas de extensión con un máximo de 6 figuras.
+
+## 2. Introducci??n
+
+  # Con estos dataset se podrá clasificar a los alumnos como aprobados o suspendidos en base a que esa nota sea mayor o menor que 10. Y se analizará si el tipo de zona donde viven los alumnos influye en la nota final.
+  
+
+## 3. Carga de datos
+
+    # Se comprueba si existe el directorio datos, si no existe, se crea.
+     if (!file.exists("datos")) {  
+                 dir.create("datos")  
+     }
+
+    # Descarga de datasets  
+     
+    fileUrl <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00320/student.zip"  
+    download.file(fileUrl,destfile="./datos/student.zip")  
+    datedownload <- format (Sys.Date (), format="%d/%m/%y")  
+    unzip("./datos/student.zip", exdir="./datos")  
+    list.files("./datos")  
+    currentDir <- getwd()  
+
+
+    # Alumnos Matematicas
+    library (knitr)  
+    if (!file.exists("./datos/student-mat.csv")) {  
+     stop(paste0("Se necesita que el fichero datos/student-mat.csv esté en: ",currentDir))
+     } 
+
+    studentMat <- read.table("./datos/student-mat.csv",row.names=NULL, sep=";", header=TRUE)  
+
+    # View(studentMat)
+
+    # Alumnos Portugues
+       if (!file.exists("./datos/student-por.csv")) {  
+        stop(paste0("Se necesita que el fichero datos/student-por.csv est?? en: ",currentDir))
+        }  
+    studentPort <- read.table("./datos/student-por.csv",row.names=NULL, sep=";", header=TRUE)  
+    # View(studentPort)  
+
+## 4. Análisis descriptivo  
+    # convertir todos los nombres d elas columnas a minuscula para seguir la guía de estilo de google
+    names (studentMat) <- tolower (names (studentMat))
+    names (studentMat)
+    
+    names (studentPort) <- tolower (names (studentPort))
+    names (studentPort)
+    
+    con <- file("./datos/student-por.csv","r")
+    studentPort <- read.csv2(con)
+    close (con)
+    head (studentPort[,1:5])
+
+    # contar cuantos campos tienen _  
+    length(grep("_",studentMat$mjob))
+    
+    # eliminar _ d elos campos
+    studentMat$mjob <- gsub("_","",studentMat$mjob)
+    length(grep("_",studentMat$mjob))
+    length(grep("_",studentPort$mjob))
+    studentPort$mjob <- gsub("_","",studentPort$mjob)
+    length(grep("_",studentPort$mjob))
+    
+    # Se calcula la media de los 3 trimestres, por sexo y escuela
+        # Dataset StudenMat
+        newSMatG1 <- cast(studentMat, sex ~ school, mean, value=c("g1") )
+        newSMatG1
+        
+        newSMatG2 <- cast(studentMat, sex ~ school, mean, value=c("g2") )
+        newSMatG2
+        
+        newSMatG3 <- cast(studentMat, sex ~ school, mean, value=c("g3") )
+        newSMatG3
+        
+  # Se observa que la media, por escuelas, comienza siendo más alta la de las mujeres y que cada cuatrimestre va disminuyendo, terminando por ser más alta la de los hombres.
+        
+        # Dataset StudentPor
+        newSPortG1 <- cast(studentPort, sex ~ school, mean, value=c("g1") )
+        newSPortG1
+        
+        newSPortG2 <- cast(studentPort, sex ~ school, mean, value=c("g2") )
+        newSPortG2
+        
+        newSPortG3 <- cast(studentPort, sex ~ school, mean, value=c("g3") )
+        newSPortG3
+        
+  # Se observa que la media, por escuelas, es más alta la de las mujeres y que cada cuatrimestre va subiendo.
+    
+  # Se clasifican los alumnos como aprobados o suspendidos. Se considera G3 como la última evaluación. Aprobados mayor a 10 (la nota es hasta el 20).
+  
+    sMatAprobados <- studentMat[!studentMat$G3<10,]
+    dim(sMatAprobados)
+    
+    sPortAprobados <- studentPort[!studentPort$G3<10,]
+    dim(sPortAprobados)
+
+## 5. Análisis exploratorio  
+  # Se quiere analizar si el tipo de hogar (Rural o Urban) afecta a la nota final (G3)  
+
+    studentMat.g3.address <- ggplot(studentMat, aes(x=studentMat$address, y=G3, fill=address))+
+      geom_boxplot()+
+      theme_bw()+
+      theme(legend.position="none")+
+      scale_fill_manual(values = c("green", "red")) +
+      xlab("Hogar: Rural o Urbano")+
+      ylab("Notas")+
+      ggtitle("Nota final Math por tipo hogar")
+      
+      studentPort.g3.address <- ggplot(studentPort, aes(x=studentPort$address, y=G3, fill=address))+
+      geom_boxplot()+
+      theme_bw()+
+      theme(legend.position="none")+
+      scale_fill_manual(values = c("green", "red")) +
+      xlab("Hogar: Rural o Urbano")+
+      ylab("Notas")+
+      ggtitle("Nota final Port por tipo hogar")
+      
+      grid.arrange (studentMat.g3.address, studentPort.g3.address, ncol=2)
+      
+      ![Grafica Nota por tipo hogar][1]
+      
+      [1]./Figuras/NotaFinalTipoHogar.png
+
+      
+      
+      
+## 6. Conclusiones
+  # Parece ser que, según los datos analizados, es más alta la nota de los alumnos en zona urbana que en zona rura.
